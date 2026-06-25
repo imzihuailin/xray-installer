@@ -46,8 +46,9 @@ type Installer struct {
 }
 
 type InstallRequest struct {
-	Domain string
-	DryRun bool
+	Domain   string
+	DestHost string
+	DryRun   bool
 }
 
 type Result struct {
@@ -71,6 +72,10 @@ func New(stdout, stderr io.Writer) *Installer {
 
 func (i *Installer) Run(ctx context.Context, req InstallRequest) (*Result, error) {
 	domain, err := normalizeDomain(req.Domain)
+	if err != nil {
+		return nil, err
+	}
+	destHost, err := normalizeDestHost(req.DestHost)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +120,7 @@ func (i *Installer) Run(ctx context.Context, req InstallRequest) (*Result, error
 		PrivateKey: privateKey,
 		PublicKey:  publicKey,
 		ShortID:    shortID,
-		DestHost:   config.DefaultDestHost,
+		DestHost:   destHost,
 		Port:       config.DefaultPort,
 	}
 
@@ -137,7 +142,7 @@ func (i *Installer) Run(ctx context.Context, req InstallRequest) (*Result, error
 		UUID:            uuid,
 		PublicKey:       publicKey,
 		ShortID:         shortID,
-		DestHost:        config.DefaultDestHost,
+		DestHost:        destHost,
 		XrayConfigPath:  xrayConfigPath,
 		ProxyConfigPath: proxyConfigPath,
 		DryRun:          req.DryRun,
@@ -389,6 +394,7 @@ func (i *Installer) step(message string) {
 func (i *Installer) printSummary(result *Result) {
 	fmt.Fprintln(i.stdout, "\n安装完成。")
 	fmt.Fprintf(i.stdout, "- domain: %s\n", result.Domain)
+	fmt.Fprintf(i.stdout, "- dest host: %s\n", result.DestHost)
 	fmt.Fprintf(i.stdout, "- node name: %s\n", result.NodeName)
 	fmt.Fprintf(i.stdout, "- public ip: %s\n", result.PublicIP)
 	fmt.Fprintf(i.stdout, "- port: %d\n", result.Port)
@@ -404,6 +410,7 @@ func (i *Installer) printSummary(result *Result) {
 func (i *Installer) printDryRunSummary(result *Result) {
 	fmt.Fprintln(i.stdout, "\nDry run 完成，未对系统做任何修改。")
 	fmt.Fprintf(i.stdout, "- domain: %s\n", result.Domain)
+	fmt.Fprintf(i.stdout, "- dest host: %s\n", result.DestHost)
 	fmt.Fprintf(i.stdout, "- node name: %s\n", result.NodeName)
 	fmt.Fprintf(i.stdout, "- public ip: %s\n", result.PublicIP)
 	fmt.Fprintf(i.stdout, "- would write xray config to: %s\n", result.XrayConfigPath)
@@ -421,6 +428,13 @@ func normalizeDomain(input string) (string, error) {
 		return "", fmt.Errorf("invalid domain %q", input)
 	}
 	return domain, nil
+}
+
+func normalizeDestHost(input string) (string, error) {
+	if strings.TrimSpace(input) == "" {
+		return config.DefaultDestHost, nil
+	}
+	return normalizeDomain(input)
 }
 
 func supportsDistro(id, like string) bool {

@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"strings"
 	"testing"
+
+	"xray-installer/internal/config"
 )
 
 func TestParseCLI(t *testing.T) {
@@ -69,7 +71,7 @@ func TestParseCLI(t *testing.T) {
 func TestPromptInstallRequest(t *testing.T) {
 	t.Parallel()
 
-	input := strings.NewReader("xx.example.com\n")
+	input := strings.NewReader("xx.example.com\nwww.apple.com\n")
 	var output bytes.Buffer
 
 	req, err := promptInstallRequest(input, &output)
@@ -80,11 +82,36 @@ func TestPromptInstallRequest(t *testing.T) {
 	if req.Domain != "xx.example.com" {
 		t.Fatalf("Domain = %q, want xx.example.com", req.Domain)
 	}
-	if !strings.Contains(output.String(), "请输入域名") {
+	if req.DestHost != "www.apple.com" {
+		t.Fatalf("DestHost = %q, want www.apple.com", req.DestHost)
+	}
+	if !strings.Contains(output.String(), "请输入 VPS 绑定的域名") {
 		t.Fatalf("prompt output missing expected labels: %q", output.String())
+	}
+	if !strings.Contains(output.String(), "请输入伪装目标域名") {
+		t.Fatalf("prompt output missing dest host label: %q", output.String())
 	}
 	if strings.Contains(output.String(), "请输入 FlClash 节点名称") {
 		t.Fatalf("prompt output should not ask for node name: %q", output.String())
+	}
+}
+
+func TestPromptInstallRequestUsesDefaultDestHost(t *testing.T) {
+	t.Parallel()
+
+	input := strings.NewReader("xx.example.com\n\n")
+	var output bytes.Buffer
+
+	req, err := promptInstallRequest(input, &output)
+	if err != nil {
+		t.Fatalf("promptInstallRequest returned error: %v", err)
+	}
+
+	if req.DestHost != config.DefaultDestHost {
+		t.Fatalf("DestHost = %q, want %q", req.DestHost, config.DefaultDestHost)
+	}
+	if !strings.Contains(output.String(), "直接回车默认 "+config.DefaultDestHost) {
+		t.Fatalf("prompt output missing default dest host hint: %q", output.String())
 	}
 }
 

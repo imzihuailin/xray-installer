@@ -203,7 +203,7 @@ proxies:
     udp: true
     tls: true
     flow: xtls-rprx-vision
-    servername: www.microsoft.com     # ←←← 和服务端 dest 保持一致
+    servername: www.apple.com     # ←←← 和服务端 dest 保持一致
     reality-opts:
       public-key: "public-key"     # ←←← 改成服务端 xray x25519 生成的 PublicKey
       short-id: "0123456789abcdef"   # ←←← 和服务端 shortIds 保持一致

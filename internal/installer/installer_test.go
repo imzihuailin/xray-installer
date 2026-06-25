@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"xray-installer/internal/config"
 )
 
 func TestSupportsDistro(t *testing.T) {
@@ -90,5 +92,55 @@ func TestWriteFileAtomicUsesRequestedMode(t *testing.T) {
 	}
 	if got := info.Mode().Perm(); got != xrayConfigMode {
 		t.Fatalf("file mode = %o, want %o", got, xrayConfigMode)
+	}
+}
+
+func TestNormalizeDestHost(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		input   string
+		want    string
+		wantErr string
+	}{
+		{
+			name:  "empty uses default",
+			input: "",
+			want:  config.DefaultDestHost,
+		},
+		{
+			name:  "space uses default",
+			input: "   ",
+			want:  config.DefaultDestHost,
+		},
+		{
+			name:  "custom domain normalized",
+			input: "WWW.Apple.COM.",
+			want:  "www.apple.com",
+		},
+		{
+			name:    "invalid domain",
+			input:   "not a domain",
+			wantErr: "invalid domain",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := normalizeDestHost(tt.input)
+			if tt.wantErr != "" {
+				if err == nil || !strings.Contains(err.Error(), tt.wantErr) {
+					t.Fatalf("normalizeDestHost error = %v, want substring %q", err, tt.wantErr)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("normalizeDestHost returned error: %v", err)
+			}
+			if got != tt.want {
+				t.Fatalf("normalizeDestHost = %q, want %q", got, tt.want)
+			}
+		})
 	}
 }

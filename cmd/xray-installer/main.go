@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 
+	"xray-installer/internal/config"
 	"xray-installer/internal/installer"
 )
 
@@ -109,13 +110,19 @@ func parseCLI(args []string) (cliOptions, error) {
 func promptInstallRequest(stdin io.Reader, stdout io.Writer) (installer.InstallRequest, error) {
 	reader := bufio.NewReader(stdin)
 
-	domain, err := promptRequired(reader, stdout, "请输入域名")
+	domain, err := promptRequired(reader, stdout, "请输入 VPS 绑定的域名")
+	if err != nil {
+		return installer.InstallRequest{}, err
+	}
+
+	destHost, err := promptDefault(reader, stdout, "请输入伪装目标域名", config.DefaultDestHost)
 	if err != nil {
 		return installer.InstallRequest{}, err
 	}
 
 	return installer.InstallRequest{
-		Domain: domain,
+		Domain:   domain,
+		DestHost: destHost,
 	}, nil
 }
 
@@ -131,6 +138,19 @@ func promptRequired(reader *bufio.Reader, stdout io.Writer, label string) (strin
 		}
 		fmt.Fprintln(stdout, "输入不能为空，请重试。")
 	}
+}
+
+func promptDefault(reader *bufio.Reader, stdout io.Writer, label, defaultValue string) (string, error) {
+	fmt.Fprintf(stdout, "%s（直接回车默认 %s）: ", label, defaultValue)
+	value, err := readLine(reader)
+	if err != nil {
+		return "", err
+	}
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return defaultValue, nil
+	}
+	return value, nil
 }
 
 func readLine(reader *bufio.Reader) (string, error) {
@@ -156,7 +176,7 @@ func printUsage(w io.Writer) {
   xray-installer --help
 
 说明:
-  1. 启动安装后只询问域名
+  1. 启动安装后询问 VPS 绑定域名和 Reality 伪装目标域名
   2. FlClash 节点名称固定使用博客长模板中的默认值
   3. 然后自动安装 Xray、生成配置并启动服务
 

@@ -15,7 +15,7 @@ func sampleParameters() Parameters {
 		PrivateKey: "private-key",
 		PublicKey:  "public-key",
 		ShortID:    "0123456789abcdef",
-		DestHost:   DefaultDestHost,
+		DestHost:   "www.apple.com",
 		Port:       DefaultPort,
 	}
 }
@@ -36,7 +36,7 @@ func TestRenderXray(t *testing.T) {
 		`"id": "12345678-1234-1234-1234-1234567890ab"`,
 		`"privateKey": "private-key"`,
 		`"shortIds": [`,
-		`"www.microsoft.com:443"`,
+		`"www.apple.com:443"`,
 	} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("rendered xray config missing %q", want)

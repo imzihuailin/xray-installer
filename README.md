@@ -3,7 +3,8 @@
 在 VPS 本机执行的 Go 命令行工具。
 
 启动后会交互式询问：
-- 域名
+- VPS 绑定的域名
+- Reality 伪装目标域名（直接回车默认 `www.microsoft.com`）
 
 FlClash 节点名称固定为博客长模板中的 `[自建 1] 美国家宽-Reality`，然后自动继续安装。
 
