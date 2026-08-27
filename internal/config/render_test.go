@@ -58,4 +58,12 @@ func TestRenderFlClash(t *testing.T) {
 	if string(data) != string(want) {
 		t.Fatalf("rendered flclash config mismatch.\n--- got ---\n%s\n--- want ---\n%s", string(data), string(want))
 	}
+
+	text := string(data)
+	if strings.Contains(text, "global-client-fingerprint:") {
+		t.Fatal("rendered flclash config contains removed global-client-fingerprint")
+	}
+	if !strings.Contains(text, "    client-fingerprint: random\n    reality-opts:") {
+		t.Fatal("rendered VLESS Reality proxy is missing node-level client-fingerprint")
+	}
 }
